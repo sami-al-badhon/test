@@ -19,6 +19,16 @@ function urlBase64ToUint8Array(base64String: string) {
   }
   return outputArray;
 }
+// types.d.ts (or just at the top of your component file)
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
 function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
@@ -171,9 +181,9 @@ function PWAInstallButton() {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // Check if it's already running as a standalone app
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+    const isStandalone = window.matchMedia(
+      '(display-mode: standalone)'
+    ).matches;
     if (isStandalone) setIsInstalled(true);
 
     return () => {
@@ -187,7 +197,7 @@ function PWAInstallButton() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    const promptEvent = deferredPrompt as any;
+    const promptEvent = deferredPrompt as BeforeInstallPromptEvent;
     promptEvent.prompt();
     const result = await promptEvent.userChoice;
     if (result.outcome === 'accepted') {
